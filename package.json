@@ -1,0 +1,45 @@
+{
+	"name": "jua",
+	"title": "jua",
+	"version": "2.0.0",
+	"release": "1",
+	"description": "jua",
+	"homepage": "http://rainloop.net",
+	"main": "gulpfile.js",
+	"author": {
+		"name": "RainLoop Team",
+		"email": "support@rainloop.net",
+		"web": "http://rainloop.net"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/RainLoop/jua.git"
+	},
+	"licenses": "MIT",
+	"bugs": {
+		"url": "https://github.com/RainLoop/jua/issues"
+	},
+	"keywords": [
+		"js",
+		"upoad",
+		"html5"
+	],
+	"readmeFilename": "README.md",
+	"engines": {
+		"node": ">= 0.10.0"
+	},
+	"devDependencies": {
+
+ 		"jshint-summary": "*",
+		"gulp-closure-compiler": "*",
+
+		"webpack": "*",
+
+		"gulp": "*",
+		"gulp-util": "*",
+		"gulp-uglify": "*",
+		"gulp-jshint": "*",
+		"gulp-rename": "*",
+		"gulp-concat-util": "*"
+	}
+}

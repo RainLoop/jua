@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script src="../vendors/jquery-1.11.1.min.js"></script>
+		<script src="../dist/jua.min.js"></script>
+
+		<style>
+			#clickPlace {
+				display: inline-block;
+				color: blue;
+				text-decoration: underline;
+			}
+			#dropPlace1, #dropPlace2 {
+				width: 200px;
+				height: 100px;
+				background-color: grey;
+				border: 2px solid black;
+				opacity:0.3;
+				filter:alpha(opacity=30);
+				margin: 10px;
+			}
+			html.onBodyDragEnter #dropPlace1 {
+				opacity:1;
+				filter:alpha(opacity=100);
+			}
+			html.onBodyDragEnter #dropPlace2 {
+				opacity:1;
+				filter:alpha(opacity=100)
+			}
+			#dropPlace1.onBodyDragEnter {
+				background-color: white;
+			}
+			#dropPlace1.onDragEnter {
+				background-color: red;
+			}
+			#dropPlace2.onBodyDragEnter {
+				background-color: white;
+			}
+			#dropPlace2.onDragEnter {
+				background-color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="clickPlace">Click Me</div>
+
+		<br />
+		<br />
+		<div id="dropPlace1">
+			First Drop Place
+		</div>
+		<div id="dropPlace2">
+			Second Drop Place
+		</div>
+
+		<script>
+			$(function () {
+
+				var
+					fHelper = function (sName) {
+						return function () {
+							window.console.log(sName, arguments);
+						}
+					},
+
+					$html = $('html'),
+					oClick = $('#clickPlace'),
+					oDrop1 = $('#dropPlace1'),
+					oDrop2 = $('#dropPlace2'),
+					
+					oJua1 = new Jua({
+						'action': 's.php',
+						'clickElement': oClick[0],
+						'dragAndDropElement': oDrop1[0],
+						'disableFolderDragAndDrop': true
+					}),
+					
+					oJua2 = new Jua({
+						'action': 's.php',
+						'dragAndDropElement': oDrop2[0],
+						'disableFolderDragAndDrop': false
+					})
+				;
+
+				oJua1.on('onBodyDragEnter', function () {
+						$html.addClass('onBodyDragEnter');
+						window.console.log('onBodyDragEnter1');
+					})
+					.on('onBodyDragLeave', function () {
+						$html.removeClass('onBodyDragEnter');
+						window.console.log('onBodyDragLeave1');
+					})
+					.on('onDragEnter', function () {
+						oDrop1.addClass('onDragEnter');
+						window.console.log('onDragEnter1');
+					})
+					.on('onDragLeave', function () {
+						oDrop1.removeClass('onDragEnter');
+						window.console.log('onDragLeave1');
+					})
+					.on('onDrop', fHelper('onDrop1'))
+					.on('onDialog', fHelper('onDialog1'))
+					.on('onProgress', fHelper('onProgress1'))
+					.on('onSelect', fHelper('onSelect1'))
+					.on('onStart', fHelper('onStart1'))
+					.on('onComplete', fHelper('onComplete1'))
+					.on('onCompleteAll', fHelper('onCompleteAll1'))
+				;
+
+				oJua2.on('onDragEnter', function () {
+						oDrop2.addClass('onDragEnter');
+						window.console.log('onDragEnter2');
+					})
+					.on('onDragLeave', function () {
+						oDrop2.removeClass('onDragEnter');
+						window.console.log('onDragLeave2');
+					})
+					.on('onDrop', fHelper('onDrop2'))
+					.on('onDialog', fHelper('onDialog2'))
+					.on('onProgress', fHelper('onProgress2'))
+					.on('onSelect', fHelper('onSelect2'))
+					.on('onStart', fHelper('onStart2'))
+					.on('onComplete', fHelper('onComplete2'))
+					.on('onCompleteAll', fHelper('onCompleteAll2'))
+				;
+			});
+		</script>
+	</body>
+</html>
