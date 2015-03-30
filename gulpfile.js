@@ -50,6 +50,14 @@
 			.on('error', gutil.log);
 	});
 
+	gulp.task('js:normal', ['js:webpack'], function() {
+		return gulp.src(['./vendors/queue.min.js', './dist/build.js'])
+			.pipe(concat('jua.js'))
+			.pipe(concat.header('/* RainLoop Webmail (c) RainLoop Team | MIT */\n'))
+			.pipe(gulp.dest('./dist/'))
+			.on('error', gutil.log);
+	});
+
 	// lint
 	gulp.task('js:lint', function() {
 

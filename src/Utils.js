@@ -2,10 +2,10 @@
 (function () {
 
 	'use strict';
-	
+
 	var
 		Utils = {},
-		
+
 		window = require('window'),
 		$ = require('$'),
 
@@ -178,10 +178,9 @@
 
 	/**
 	 * @param {*} oFile
-	 * @param {string=} sPath
 	 * @return {Object}
 	 */
-	Utils.getDataFromFile = function (oFile, sPath)
+	Utils.getDataFromFile = function (oFile)
 	{
 		var
 			sFileName = Utils.isUndefined(oFile.fileName) ? (Utils.isUndefined(oFile.name) ? null : oFile.name) : oFile.fileName,
@@ -189,11 +188,21 @@
 			sType = Utils.isUndefined(oFile.type) ? null : oFile.type
 		;
 
+		if (sFileName.charAt(0) === '/')
+		{
+			sFileName = sFileName.substr(1);
+		}
+
+		if ('' === sType && 0 === iSize)
+		{
+			return null; // Folder
+		}
+
 		return {
 			'FileName': sFileName,
 			'Size': iSize,
 			'Type': sType,
-			'Folder': Utils.isUndefined(sPath) ? '' : sPath,
+			'Folder': '',
 			'File' : oFile
 		};
 	};
@@ -201,71 +210,21 @@
 	/**
 	 * @param {*} aItems
 	 * @param {Function} fFileCallback
-	 * @param {boolean=} bEntry = false
-	 * @param {boolean=} bAllowFolderDragAndDrop = true
 	 * @param {number=} iLimit = 20
 	 * @param {Function=} fLimitCallback
 	 */
-	Utils.getDataFromFiles = function (aItems, fFileCallback, bEntry, bAllowFolderDragAndDrop, iLimit, fLimitCallback)
+	Utils.getDataFromFiles = function (aItems, fFileCallback, iLimit, fLimitCallback)
 	{
 		var
 			iInputLimit = 0,
 			iLen = 0,
 			iIndex = 0,
 			oItem = null,
-			oEntry = null,
+			oFile = null,
 			bUseLimit = false,
-			bCallLimit = false,
-			fTraverseFileTree = function (oItem, sPath, fCallback, fLimitCallbackProxy) {
-
-				if (oItem && !Utils.isUndefined(oItem['name']))
-				{
-					sPath = sPath || '';
-					if (oItem['isFile'])
-					{
-						oItem.file(function (oFile) {
-							if (!bUseLimit || 0 <= --iLimit)
-							{
-								fCallback(Utils.getDataFromFile(oFile, sPath));
-							}
-							else if (bUseLimit && !bCallLimit)
-							{
-								if (0 > iLimit && fLimitCallback)
-								{
-									bCallLimit = true;
-									fLimitCallback(iInputLimit);
-								}
-							}
-						});
-					}
-					else if (bAllowFolderDragAndDrop && oItem['isDirectory'] && oItem['createReader'])
-					{
-						var
-							oDirReader = oItem['createReader'](),
-							iIndex = 0,
-							iLen = 0
-						;
-
-						if (oDirReader && oDirReader['readEntries'])
-						{
-							oDirReader['readEntries'](function (aEntries) {
-								if (aEntries && Utils.isNonEmptyArray(aEntries))
-								{
-									for (iIndex = 0, iLen = aEntries.length; iIndex < iLen; iIndex++)
-									{
-										fTraverseFileTree(aEntries[iIndex], sPath + oItem['name'] + '/', fCallback, fLimitCallbackProxy);
-									}
-								}
-							});
-						}
-					}
-				}
-			}
+			bCallLimit = false
 		;
 
-		bAllowFolderDragAndDrop = Utils.isUndefined(bAllowFolderDragAndDrop) ? true : !!bAllowFolderDragAndDrop;
-
-		bEntry = Utils.isUndefined(bEntry) ? false : !!bEntry;
 		iLimit = Utils.isUndefined(iLimit) ? Globals.iDefLimit : Utils.pInt(iLimit);
 		iInputLimit = iLimit;
 		bUseLimit = 0 < iLimit;
@@ -278,30 +237,20 @@
 				oItem = aItems[iIndex];
 				if (oItem)
 				{
-					if (bEntry)
+					if (!bUseLimit || 0 <= --iLimit)
 					{
-						if ('file' === oItem['kind'] && oItem['webkitGetAsEntry'])
+						oFile = Utils.getDataFromFile(oItem);
+						if (oFile)
 						{
-							oEntry = oItem['webkitGetAsEntry']();
-							if (oEntry)
-							{
-								fTraverseFileTree(oEntry, '', fFileCallback, fLimitCallback);
-							}
+							fFileCallback(oFile);
 						}
 					}
-					else
+					else if (bUseLimit && !bCallLimit)
 					{
-						if (!bUseLimit || 0 <= --iLimit)
+						if (0 > iLimit && fLimitCallback)
 						{
-							fFileCallback(Utils.getDataFromFile(oItem));
-						}
-						else if (bUseLimit && !bCallLimit)
-						{
-							if (0 > iLimit && fLimitCallback)
-							{
-								bCallLimit = true;
-								fLimitCallback(iInputLimit);
-							}
+							bCallLimit = true;
+							fLimitCallback(iInputLimit);
 						}
 					}
 				}
@@ -320,7 +269,7 @@
 		var aFiles = oInput && oInput.files && 0 < oInput.files.length ? oInput.files : null;
 		if (aFiles)
 		{
-			Utils.getDataFromFiles(aFiles, fFileCallback, false, false, iLimit, fLimitCallback);
+			Utils.getDataFromFiles(aFiles, fFileCallback, iLimit, fLimitCallback);
 		}
 		else
 		{
@@ -362,32 +311,20 @@
 	 * @param {Function} fFileCallback
 	 * @param {number=} iLimit = 20
 	 * @param {Function=} fLimitCallback
-	 * @param {boolean=} bAllowFolderDragAndDrop = true
 	 */
-	Utils.getDataFromDragEvent = function (oEvent, fFileCallback, iLimit, fLimitCallback, bAllowFolderDragAndDrop)
+	Utils.getDataFromDragEvent = function (oEvent, fFileCallback, iLimit, fLimitCallback)
 	{
-		var
-			aItems = null,
-			aFiles = null
-		;
+		var aFiles = null;
 
 		oEvent = Utils.getEvent(oEvent);
-		if (oEvent)
+		if (oEvent && Utils.eventContainsFiles(oEvent))
 		{
-			aItems = (oEvent.dataTransfer ? Utils.getValue(oEvent.dataTransfer, 'items', null) : null) || Utils.getValue(oEvent, 'items', null);
-			if (aItems && 0 < aItems.length && aItems[0] && aItems[0]['webkitGetAsEntry'])
-			{
-				Utils.getDataFromFiles(aItems, fFileCallback, true, bAllowFolderDragAndDrop, iLimit, fLimitCallback);
-			}
-			else if (Utils.eventContainsFiles(oEvent))
-			{
-				aFiles = (Utils.getValue(oEvent, 'files', null) || (oEvent.dataTransfer ?
-					Utils.getValue(oEvent.dataTransfer, 'files', null) : null));
+			aFiles = (Utils.getValue(oEvent, 'files', null) || (oEvent.dataTransfer ?
+				Utils.getValue(oEvent.dataTransfer, 'files', null) : null));
 
-				if (aFiles && 0 < aFiles.length)
-				{
-					Utils.getDataFromFiles(aFiles, fFileCallback, false, false, iLimit, fLimitCallback);
-				}
+			if (aFiles && 0 < aFiles.length)
+			{
+				Utils.getDataFromFiles(aFiles, fFileCallback, iLimit, fLimitCallback);
 			}
 		}
 	};

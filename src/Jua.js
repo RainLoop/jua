@@ -16,11 +16,11 @@
 	{
 		oOptions = Utils.isUndefined(oOptions) ? {} : oOptions;
 
-		var 
+		var
 			self = this,
 
 			Driver = null,
-				
+
 			window = require('window'),
 			$ = require('$'),
 
@@ -53,7 +53,6 @@
 			'dragAndDropElement': false,
 			'dragAndDropBodyElement': false,
 			'disableAjaxUpload': false,
-			'disableFolderDragAndDrop': true,
 			'disableDragAndDrop': false,
 			'disableMultiple': false,
 			'disableDocumentDropPrevent': false,
@@ -70,9 +69,9 @@
 
 		Driver = (self.isAjaxUploaderSupported() && !Utils.getValue(self.oOptions, 'disableAjaxUpload', false) ?
 			require('./AjaxDriver.js') : require('./IframeDriver.js'));
-		
+
 		self.oDriver = new Driver(self, self.oOptions);
-		
+
 		self.oClickElement = Utils.getValue(self.oOptions, 'clickElement', null);
 
 		if (self.oClickElement)
@@ -138,8 +137,7 @@
 										}
 									},
 									Utils.getValue(self.oOptions, 'multipleSizeLimit', Globals.iDefLimit),
-									self.getEvent('onLimitReached'),
-									!Utils.getValue(self.oOptions, 'disableFolderDragAndDrop', true)
+									self.getEvent('onLimitReached')
 								);
 							}
 						}
